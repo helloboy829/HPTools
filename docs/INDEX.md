@@ -16,6 +16,7 @@
 | `docs/08_SECURITY_AND_RELIABILITY.md` | 凭据、目标授权、文件安全、错误处理和恢复 |
 | `docs/09_ROADMAP_AND_ACCEPTANCE.md` | 分期交付、验收门槛和测试矩阵 |
 | `docs/10_SOURCE_WORKBOOK_NOTES.md` | 源工作簿核验流程、字段映射和导入约束 |
+| `docs/11_REAL_PROJECT_PATTERN_ANALYSIS.md` | 本机真实评测项目抽查、对象边界澄清和待确认项 |
 
 ### 协议 Schema
 

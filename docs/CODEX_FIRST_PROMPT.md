@@ -1,6 +1,6 @@
 # Codex 启动提示词（可直接复制）
 
-请先完整阅读仓库根目录 `README.md`、`AGENTS.md`、`docs/AGENTS.md` 和 `docs/` 下全部 Markdown 文档。它们是 AI-PERF 项目的需求与技术规格基线。对标注为“建议基线/待确认”的内容，应在实施前识别并确认，不能将其说成业务方已经批准。
+请先完整阅读仓库根目录 `README.md`、`AGENTS.md`、`docs/AGENTS.md` 和 `docs/` 下全部 Markdown 文档，包括 `docs/11_REAL_PROJECT_PATTERN_ANALYSIS.md`。它们是 AI-PERF 项目的需求与技术规格基线。真实项目抽查用于说明已有数据和流程差异，不代表全局批准标准；对标注为“建议基线/待确认”的内容，应在实施前识别并确认，不能将其说成业务方已经批准。
 
 当前最终架构已经确定：
 - Windows 是唯一 Web 管理端，Python 3.11 + Conda + FastAPI，Vue3 编译静态资源由 FastAPI 托管。

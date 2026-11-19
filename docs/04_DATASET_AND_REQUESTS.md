@@ -2,50 +2,57 @@
 
 ## 1. 范围与原则
 
-本规格定义从数据集行到真实 HTTP 请求的映射。第一阶段必须支持 JSON、multipart 图片/PDF/Excel、多文件和 Dify 文件上传后调用工作流的典型路径。对上传文件的压力测试必须实际上传原文件；只有用户明确选择“预处理文本模式”时才可用预处理后的文本替代原始文件。
+本规格定义从可执行测试用例到真实 HTTP 请求的映射。首期要区分两种“文件格式”：一是作为用例输入的数据源（CSV/JSON/JSONL/XLSX 的正式支持清单仍待确认）；二是被测 API 要接收的真实附件（图片、PDF、Excel 等，按请求场景上传原文件）。把 `.xlsx` 当 API 附件支持，不自动意味着必须把任意 XLSX 工作簿解析成用例；支持 CSV 用例也不意味着可以把 PDF 附件抽取文本来替代原文件。对上传文件的压力测试必须实际上传原文件；只有用户明确选择“预处理文本模式”时才可用预处理后的文本替代原始文件。
 
 具体格式支持级别若标为“建议基线”，实施前应结合源工作簿和样例确认。数据文件不得执行宏、公式、脚本或 Shell 命令。
 
 ## 2. 数据集对象和版本
 
-建议数据集由逻辑对象、不可变版本、逐行值和附件组成：
+建议数据集由逻辑对象、不可变版本、可执行用例、预期结果、来源记录和附件组成。组件登记清单（含组件名称、接口信息和验收来源）是另一类导入对象，不直接当作可执行数据集：
 
 ```text
 Dataset(id, name, source_format)
   └── DatasetVersion(id, version, source_sha256, schema, created_at)
-        ├── DatasetRow(row_id, ordinal, values)
-        └── FileAsset(asset_id, safe_name, size, media_type, sha256, storage_ref)
+        ├── TestCase(case_id, ordinal, values, payload?, expected?, provenance)
+        └── Asset(asset_id, safe_name, size, media_type, sha256, storage_ref)
+
+ComponentRegistrySource(id, source_sha256, source_format, mapping_version)
+  └── ComponentProfile / ScenarioProfile 草稿（审核后才可执行）
 ```
 
-创建 Run 时固定 `dataset_version_id` 和附件哈希。更新源文件应生成新版本，不覆盖已被历史 Run 引用的内容。
+`TestCase` 是一条待执行的业务样本，不是已渲染的 HTTP 请求。建议字段包括：稳定 `case_id`、有序 `ordinal`、保留 JSON 原生类型的 `values`、可选完整 `payload`、可选异构 `expected`、Asset 引用及来源/清洗记录。`payload` 可以为空，由已审核的 Scenario 映射构造；不得从字段名猜测请求含义。`expected` 由显式 evaluator/schema 解释，不能假定所有组件都返回同一形状。附件通过 Asset ID 引用，不能在用例中保存绝对路径。
+
+若产品支持组件清单导入，应将其用于登记组件、功能层级、接口示例、验收来源和附件说明；其工作表、表头行、列映射和清单版本必须在预览时由用户确认。导入先生成未启用草稿，不自动执行网络请求。正式清单导入是否进入首版仍待确认，也可以先由用户手工维护 ComponentProfile。
+
+创建 Run 时固定 `dataset_version_id`、用例 ID 与顺序、附件哈希以及 Request/Scenario/Evaluation Profile 版本。更新源文件或清洗规则应生成新 DatasetVersion，不覆盖已被历史 Run 引用的内容。
 
 ### 2.1 建议首期输入格式
 
 | 格式 | 建议支持方式 | 注意事项 |
 |---|---|---|
-| CSV | UTF-8/UTF-8 BOM，首行字段名 | 分隔符和引号按 RFC 4180 兼容规则；其他编码要明确导入选项 |
-| JSON | 根节点数组或定义明确的行数组 | 不允许任意对象展开造成歧义 |
-| JSONL | 每行一个 JSON 对象 | 错误报告包含行号；大文件逐行读取 |
-| XLSX | 指定 sheet、标题行和数据范围 | 公式值、合并单元格、多 sheet 行为须明确；禁止执行宏 |
+| CSV | UTF-8/UTF-8 BOM；首行字段名需经预览确认 | 分隔符和引号按 RFC 4180 兼容规则；其他编码要明确导入选项 |
+| JSON | 根节点数组或定义明确的行数组 | 不允许任意对象展开造成歧义；对象型字典须选择显式路径/映射 |
+| JSONL | 每行一个 JSON 对象 | 错误报告包含行号和字段路径；大文件逐行读取 |
+| XLSX | 仅在格式清单获批后作为数据源；用户指定 sheet、标题行和数据范围 | 公式缓存值、合并单元格、隐藏行、多 sheet 行为待确认；禁止执行宏 |
 | 附件目录 | CSV/JSON 行通过相对路径引用 | 限定在数据集根目录，禁止路径穿越和符号链接逃逸 |
 
-格式清单是建议基线，源 Excel 的具体业务字段不在当前目录，见 `10_SOURCE_WORKBOOK_NOTES.md`。
+此表是格式候选，不代表首期导入格式已全部批准。必须区分“解析 XLSX 用例工作簿”和“把 XLSX 文件作为 HTTP 附件上传”；分别定义格式、预览、安全检查和验收标准。源项目存在多种组件清单和用例文件形态，不存在已确认的单一全局表头，见 `10_SOURCE_WORKBOOK_NOTES.md` 和 `11_REAL_PROJECT_PATTERN_ANALYSIS.md`。
 
 ### 2.2 数据行字段语义
 
-建议把每行值视为 JSON object；字符串、数字、布尔、null 和数组/对象均保留类型。字段名区分大小写。空白字符串与 null 不自动等价。输入缺字段、额外字段、类型不匹配时，在预览/校验时明确报出。
+建议把每条用例的输入值视为 JSON object；字符串、数字、布尔、null 和数组/对象均保留类型。字段名区分大小写。空白字符串与 null 不自动等价。输入缺字段、额外字段、类型不匹配时，在预览/校验时明确报出。用例预期结果、来源/清洗记录、附件引用是独立于输入值的字段；不同组件的 `expected` 形状可以不同，但必须绑定明确的评估规则版本。
 
 附件字段可以使用资产引用对象，而不是把文件二进制塞入 JSON：
 
 ```json
 {
   "case_id": "case-001",
-  "prompt": "总结此文件",
-  "document": {
-    "asset_id": "asset-uuid",
-    "filename": "sample.pdf",
-    "media_type": "application/pdf"
-  }
+  "values": {"prompt": "总结此文件"},
+  "asset_refs": [
+    {"asset_id": "asset-uuid", "field": "document", "role": "input"}
+  ],
+  "expected": null,
+  "provenance": {"source_file": "cases.jsonl", "source_line": 1}
 }
 ```
 
@@ -166,7 +173,7 @@ cURL 导入只是将命令文本解析为请求草稿，永不执行所导入命
 
 ## 11. 待确认
 
-1. CSV/XLSX/JSON/JSONL 首期正式支持清单和最大数据规模。
+1. CSV/XLSX/JSON/JSONL 首期正式支持清单和最大数据规模；组件清单工作簿与可执行用例工作簿是否都要导入。
 2. Excel 多 Sheet、公式单元格、合并单元格和隐藏行的处理规则。
 3. 是否需要数组/嵌套对象的字段映射界面。
 4. 插值语法、JSON Pointer 提取和失败时后续步骤策略。

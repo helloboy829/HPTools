@@ -45,9 +45,9 @@
 UI ──HTTP/WebSocket──> API 层 ──> Application Services ──> Domain/Core
                             │             │                   │
                             │             ├── SQLite           ├── Request Builder
-                            │             ├── Package Service   ├── Dataset Reader
+                            │             ├── Package Service   ├── Dataset Importer/Reader
                             │             └── Run Coordinator   ├── Engine/Scheduler
-                            │                                   ├── Validator/Metrics
+                            │                                   ├── Evaluator/Acceptance
                             └── Static Assets                   └── Result Schema
 
 Worker CLI ──> Package Validator ──> Application Services ──> 同一 Domain/Core
@@ -58,10 +58,10 @@ Worker CLI ──> Package Validator ──> Application Services ──> 同一
 | 模块 | 输入 | 输出 | 依赖规则 |
 |---|---|---|---|
 | Domain 模型 | 已验证字段 | 不可变任务/请求/结果对象 | 不依赖 Web、数据库或操作系统 shell |
-| Request Builder | 请求定义、数据行、凭据运行时提供器 | HTTP 请求计划/流 | 不执行导入命令；敏感值只在发送时注入 |
-| Dataset Reader | CSV/JSON/XLSX 等来源及映射 | 逐行结构化值和文件流 | 采用流式/分批读取；路径受根目录约束 |
-| Engine | 任务快照、请求计划、执行策略 | 事件流、请求结果、汇总指标 | 与 FastAPI/UI 解耦；负责并发上限和取消 |
-| Validator | 响应元信息/有限响应字段、规则 | 通过/失败/不适用及说明 | 规则版本化；不隐式调用 LLM/OCR |
+| Dataset Importer / Reader | 已确认的数据文件、显式字段映射和附件引用 | 可预览的 TestCase、逐行诊断和受控 Asset | 清单导入与用例导入分开；流式/分批读取；路径受根目录约束；不猜测业务字段 |
+| Request Builder / Protocol Adapter | 已审核的 Scenario Profile、TestCase 和本机凭据提供器 | HTTP 请求计划、流式/多步响应事实 | 按场景显式配置；不从组件名猜协议；本地附件与远端 file ID 分离 |
+| Engine | 任务快照、请求计划、执行策略 | 事件流、逻辑请求/尝试结果、汇总指标 | 与 FastAPI/UI 解耦；负责并发上限和取消 |
+| Evaluator / Acceptance | 请求记录、版本化断言和阈值来源 | 每条断言结果、人工复核状态、准出结论 | 执行与评估分离；HTTP 状态不直接代表业务结论；缺少标准时不得默认 PASS |
 | Persistence | 领域事件/结果 | SQLite 或 Worker 本地文件 | 通过接口隔离，不让 Engine 依赖管理 API |
 | Package Service | 快照和数据/文件引用 | ZIP 包或解析对象 | 校验路径、大小、版本和哈希；无秘密 |
 | FastAPI | HTTP 输入和 UI 请求 | JSON、静态资源、WebSocket 事件 | 仅 Windows 管理端 |
@@ -79,8 +79,8 @@ src/aiperf/
   application/     # 创建、启动、取消、导入导出用例
   engine/          # 调度、并发、请求发送、指标、取消
   requests/        # 请求解析、模板、multipart、cURL 导入
-  datasets/        # 文件识别、读取、字段映射、附件流
-  validation/      # 规则模型和执行器
+  datasets/        # 清单/用例导入、预览、显式映射、Asset 引用和附件流
+  validation/      # 版本化评估规则、人工复核和准出执行器
   packages/        # task/result ZIP 协议
   persistence/     # Windows SQLite 与 Worker 本地存储适配器
   api/             # FastAPI 路由、WebSocket、静态文件

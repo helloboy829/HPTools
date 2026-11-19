@@ -18,8 +18,9 @@
 9. `docs/08_SECURITY_AND_RELIABILITY.md`：凭据、文件安全、错误处理、恢复。
 10. `docs/09_ROADMAP_AND_ACCEPTANCE.md`：分期开发、验收标准和测试清单。
 11. `docs/10_SOURCE_WORKBOOK_NOTES.md`：源工作簿核验流程、字段映射和导入约束。
+12. `docs/11_REAL_PROJECT_PATTERN_ANALYSIS.md`：真实项目模式抽查及其对数据、组件配置、评估和运行快照的影响。
 
-> 当前仓库尚未提供原始《AI组件测试对象清单》文件，因此第 11 项暂为核验/适配流程，不是对实际工作簿内容的分析结论。其余专题文档中未有来源依据的设计均以“建议基线”或“待确认”标明。
+> 当前仓库没有一份已确认的权威《AI组件测试对象清单》。本机项目资料目录中有多份项目专属清单和测试工具包，代表性结构已在第 12 项记录；这些样本不能代替用户确认的统一模板。其余未有来源依据的设计均以“建议基线”或“待确认”标明。
 
 ## 2. 产品一句话定义
 
@@ -57,7 +58,7 @@ AI-PERF 是一个面向内网 AI API / AI 组件的跨平台性能测试工具�
 - 任务包中不得明文保存真实 Token、Secret Key、HMAC 密钥等凭据。
 - 目标 API 地址由用户显式配置；不能自动扫描网段或对未知目标发起压力测试。
 
-详细功能、数据、执行、协议、安全与验收要求分别见 [`01_PRODUCT_REQUIREMENTS.md`](01_PRODUCT_REQUIREMENTS.md) 至 [`10_SOURCE_WORKBOOK_NOTES.md`](10_SOURCE_WORKBOOK_NOTES.md)。
+详细功能、数据、执行、协议、安全与验收要求分别见 [`01_PRODUCT_REQUIREMENTS.md`](01_PRODUCT_REQUIREMENTS.md) 至 [`11_REAL_PROJECT_PATTERN_ANALYSIS.md`](11_REAL_PROJECT_PATTERN_ANALYSIS.md)。
 
 ## 6. 给 Codex 的首轮任务
 
