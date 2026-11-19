@@ -21,6 +21,7 @@ AI-PERF 是面向内网 AI API / AI 组件的跨平台性能测试平台。它�
 - [安全与可靠性](docs/08_SECURITY_AND_RELIABILITY.md)
 - [路线图与验收](docs/09_ROADMAP_AND_ACCEPTANCE.md)
 - [源工作簿适配说明](docs/10_SOURCE_WORKBOOK_NOTES.md)
+- [真实项目模式分析](docs/11_REAL_PROJECT_PATTERN_ANALYSIS.md)
 - [ZIP 协议 JSON Schema 草案](schemas/1.0/)
 
 ## 核心架构边界
@@ -35,7 +36,7 @@ AI-PERF 是面向内网 AI API / AI 组件的跨平台性能测试平台。它�
 
 ## 文档状态
 
-`docs/01_*` 至 `docs/10_*` 是供评审和实施使用的详细规格基线。凡现有项目资料没有明确依据的产品选择，都在文档中标注为“建议基线”或“待确认”，不能视为已经由业务方确认。源工作簿尚未随当前目录提供，因此 `docs/10_SOURCE_WORKBOOK_NOTES.md` 不声称掌握其真实表头或字段。
+`docs/01_*` 至 `docs/11_*` 是供评审和实施使用的详细规格基线。凡现有项目资料没有明确依据的产品选择，都在文档中标注为“建议基线”或“待确认”，不能视为已经由业务方确认。源工作簿尚未随当前目录提供，因此 `docs/10_SOURCE_WORKBOOK_NOTES.md` 不声称掌握其真实表头或字段。
 
 ## 本地开发
 

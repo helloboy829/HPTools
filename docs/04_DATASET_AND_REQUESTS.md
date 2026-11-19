@@ -56,6 +56,40 @@ ComponentRegistrySource(id, source_sha256, source_format, mapping_version)
 }
 ```
 
+### 2.3 当前 Reader v1 实现边界
+
+`aiperf.datasets` 当前提供独立的可执行用例读取器，技术实现支持 CSV、JSON 数组和 JSONL；它只负责把源记录转换为有序 `DatasetCase` 并给出导入诊断，不负责组件清单导入、Asset 落盘/去重、字段映射界面、请求构建、执行或效果评估。XLSX/XLS 用例工作簿解析仍待确认，不因 Excel 可作为 HTTP 附件而默认启用。
+
+- 调用方必须显式传入绝对源路径和 `DatasetFormat`；附件校验时还要显式传绝对 `dataset_root`。
+- CSV 使用 UTF-8/UTF-8 BOM 和首行表头。`case_id`、`component_id`、`scenario_id`、`payload`、`expected`、`source`、`metadata`、`asset_refs` 和 `input_paths` 列映射到同名用例字段；其它列（包括名为 `values` 的列）保持为 `values` 中的字符串。字段名为空或重复、数据行列数不匹配均会报错。单元格保持原始字符串，`001`、`false`、空单元格及看起来像 JSON 的文本不会被自动转型或反序列化。
+- JSON 输入必须是对象数组；JSONL 每个非空物理行必须是一个对象。JSON/JSONL 中字符串、数字、布尔、null、数组和对象保留 JSON 类型；重复对象键、非标准 `NaN`/`Infinity` 常量及转换为非有限浮点数的溢出数值会拒绝。字符串内序列化的 JSON 不会二次解析。
+- 对象可以使用显式 `values` 对象；未放入 `values` 的业务字段会并入 `values`。`case_id`、`component_id`、`scenario_id`、`payload`、`expected`、`source`、`metadata`、`asset_refs` 和 `input_paths` 会作为独立用例字段保留。CSV 的 `provenance` 列和 JSON/JSONL 的 `provenance` 字段均保留在 `provenance.source_metadata`，读取器同时写入源文件名和物理记录起始行。
+- 缺少 `case_id`、JSON null ID 或 CSV 空 ID 时，读取器按源顺序生成 `row-000001` 等 ID；显式重复 ID、JSON 空白 ID 会给出可定位错误。重复 ID 检测需要在导入期间保存已见 ID 集合，因此额外内存随用例数量增加；正文记录仍逐条产出。
+- 空 CSV/JSONL 行默认报错；只有显式设置 `DatasetReaderOptions(skip_blank_rows=True)` 才跳过。跳过空行不增加用例 ordinal。错误详情只含源文件名、行号、字段和固定原因，不回显数据值或附件路径。
+- `input_paths`、结构化 JSON/JSONL 的 `asset_refs[*].path` 和 `DatasetReaderOptions.attachment_fields` 指定的字段只用于路径安全检查；值保持原样，不会因此自动转成 Asset。null、空字符串和空数组表示没有本地路径；非空路径必须是数据集根目录下存在的普通文件；拒绝绝对路径、盘符/UNC 路径、`..` 穿越、缺失文件和解析到根目录之外的符号链接。已管理的 `asset_id` 不当成本地路径处理。CSV 的单元格一律作为字符串保留，不会把其中的 JSON 文本解析成 `asset_refs` 对象。
+
+`DatasetCase` 是 frozen dataclass，可防止字段重绑定；其中用于保留原生 JSON 类型的 dict/list 是普通 Python 容器，仍可被调用方修改。创建 DatasetVersion/Run 快照时，后续服务必须进行独立序列化或复制，不能把该读取对象本身当作深度不可变快照。
+
+CSV 和 JSONL 按行读取，JSON 数组按记录增量解码。每条记录及单个字段仍需驻留内存；格式总大小、单记录大小、总附件大小和保留期还没有业务批准值，需在后续导入/资产服务中单独配置和验收。读取器不计算完整 DatasetVersion 哈希；创建不可变版本和资产哈希属于后续服务层。
+
+用例读取使用共享 Engine 包中的纯 Python 接口：
+
+```python
+from pathlib import Path
+
+from aiperf.datasets import DatasetFormat, DatasetReaderOptions, iter_dataset_cases
+
+for case in iter_dataset_cases(
+    Path(r"D:\datasets\cases.jsonl"),
+    DatasetFormat.JSONL,
+    dataset_root=Path(r"D:\datasets"),
+    options=DatasetReaderOptions(attachment_fields=("document_path",)),
+):
+    print(case.ordinal, case.case_id, case.values)
+```
+
+以上目录和字段仅作 API 用法示意，不是产品默认路径或固定业务 schema。
+
 ## 3. 文件管理与安全
 
 - 上传按流处理；服务端设置可配置的单文件、总量和文件数量限制（具体数值待确认）。
