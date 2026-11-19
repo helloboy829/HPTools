@@ -7,7 +7,7 @@
 
 按以下顺序完整阅读，不要只读本文件：
 
-1. `AGENTS.md`：Codex 的开发约束与工作方式。
+1. 根目录 `AGENTS.md` 与 `docs/AGENTS.md`：项目入口和 Codex 开发约束。
 2. `docs/01_PRODUCT_REQUIREMENTS.md`：产品目标、用户流程、功能范围。
 3. `docs/02_ARCHITECTURE.md`：最终部署架构和模块边界。
 4. `docs/03_EXECUTION_ENGINE.md`：压测模型、并发、指标、事务定义。
@@ -17,7 +17,9 @@
 8. `docs/07_DEPLOYMENT_OFFLINE.md`：Windows Conda、Linux Docker、离线依赖交付。
 9. `docs/08_SECURITY_AND_RELIABILITY.md`：凭据、文件安全、错误处理、恢复。
 10. `docs/09_ROADMAP_AND_ACCEPTANCE.md`：分期开发、验收标准和测试清单。
-11. `docs/10_SOURCE_WORKBOOK_NOTES.md`：已提供的《AI组件测试对象清单》实际结构与适配注意事项。
+11. `docs/10_SOURCE_WORKBOOK_NOTES.md`：源工作簿核验流程、字段映射和导入约束。
+
+> 当前仓库尚未提供原始《AI组件测试对象清单》文件，因此第 11 项暂为核验/适配流程，不是对实际工作簿内容的分析结论。其余专题文档中未有来源依据的设计均以“建议基线”或“待确认”标明。
 
 ## 2. 产品一句话定义
 
@@ -54,6 +56,8 @@ AI-PERF 是一个面向内网 AI API / AI 组件的跨平台性能测试工具�
 - “解析文件格式”首先是文件识别、校验、预览、字段映射和用例关联，不等于一定要 OCR 或抽取全部正文。
 - 任务包中不得明文保存真实 Token、Secret Key、HMAC 密钥等凭据。
 - 目标 API 地址由用户显式配置；不能自动扫描网段或对未知目标发起压力测试。
+
+详细功能、数据、执行、协议、安全与验收要求分别见 [`01_PRODUCT_REQUIREMENTS.md`](01_PRODUCT_REQUIREMENTS.md) 至 [`10_SOURCE_WORKBOOK_NOTES.md`](10_SOURCE_WORKBOOK_NOTES.md)。
 
 ## 6. 给 Codex 的首轮任务
 

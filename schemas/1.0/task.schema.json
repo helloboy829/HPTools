@@ -1,0 +1,139 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aiperf.invalid/schemas/1.0/task.schema.json",
+  "title": "AI-PERF task 1.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "task"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "task": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["task_id", "name", "target", "execution", "request_spec", "dataset", "credential_refs"],
+      "properties": {
+        "task_id": {"type": "string", "format": "uuid"},
+        "name": {"type": "string", "minLength": 1, "maxLength": 200},
+        "target": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["base_url", "authorization_acknowledged"],
+          "properties": {
+            "base_url": {"type": "string", "format": "uri", "minLength": 1},
+            "authorization_acknowledged": {"const": true},
+            "authorization_reference": {"type": "string", "maxLength": 500}
+          }
+        },
+        "execution": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["mode", "request_count", "concurrency", "connect_timeout_seconds", "request_timeout_seconds", "warmup_count", "retry_policy"],
+          "properties": {
+            "mode": {"const": "fixed_concurrency"},
+            "request_count": {"type": "integer", "minimum": 1},
+            "concurrency": {"type": "integer", "minimum": 1, "maximum": 100},
+            "connect_timeout_seconds": {"type": "number", "exclusiveMinimum": 0},
+            "request_timeout_seconds": {"type": "number", "exclusiveMinimum": 0},
+            "warmup_count": {"type": "integer", "minimum": 0},
+            "retry_policy": {"const": "none"},
+            "dataset_mode": {"enum": ["sequential", "cycle", "random_seeded"]},
+            "dataset_seed": {"type": "integer"}
+          }
+        },
+        "request_spec": {"$ref": "#/$defs/requestSpec"},
+        "dataset": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["version_id", "path", "format", "sha256"],
+          "properties": {
+            "version_id": {"type": "string", "format": "uuid"},
+            "path": {"type": "string", "minLength": 1},
+            "format": {"enum": ["csv", "json", "jsonl", "xlsx"]},
+            "sha256": {"$ref": "#/$defs/sha256"}
+          }
+        },
+        "credential_refs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "required", "source"],
+            "properties": {
+              "name": {"type": "string", "minLength": 1},
+              "required": {"type": "boolean"},
+              "source": {"const": "worker_local"}
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "requestSpec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["steps"],
+      "properties": {
+        "steps": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/step"}
+        },
+        "validation_rules": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/validationRule"}
+        }
+      }
+    },
+    "step": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["step_id", "name", "method", "url", "body"],
+      "properties": {
+        "step_id": {"type": "string", "pattern": "^[A-Za-z0-9_-]{1,64}$"},
+        "name": {"type": "string", "minLength": 1, "maxLength": 200},
+        "method": {"enum": ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"]},
+        "url": {"type": "string", "minLength": 1},
+        "query": {"type": "array", "items": {"$ref": "#/$defs/keyValue"}},
+        "headers": {"type": "array", "items": {"$ref": "#/$defs/keyValue"}},
+        "body": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind"],
+          "properties": {
+            "kind": {"enum": ["none", "json", "form", "multipart", "text", "binary"]},
+            "value": {},
+            "parts": {"type": "array", "items": {"type": "object"}}
+          }
+        },
+        "extract": {"type": "array", "items": {"type": "object"}},
+        "timeout_seconds": {"type": "number", "exclusiveMinimum": 0}
+      }
+    },
+    "keyValue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "value"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "value": {"type": "string"},
+        "sensitive": {"type": "boolean", "default": false}
+      }
+    },
+    "validationRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rule_id", "type", "required"],
+      "properties": {
+        "rule_id": {"type": "string", "minLength": 1},
+        "type": {"enum": ["status_code", "json_path_equals", "json_path_contains", "json_path_exists", "json_number_range"]},
+        "required": {"type": "boolean"},
+        "path": {"type": "string"},
+        "expected": {},
+        "minimum": {"type": "number"},
+        "maximum": {"type": "number"}
+      }
+    }
+  }
+}

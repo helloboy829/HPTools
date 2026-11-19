@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aiperf.invalid/schemas/1.0/manifest.schema.json",
+  "title": "AI-PERF package manifest 1.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "format",
+    "kind",
+    "schema_version",
+    "package_id",
+    "created_at_utc",
+    "producer",
+    "compatibility",
+    "task_id",
+    "task_snapshot_sha256",
+    "files"
+  ],
+  "properties": {
+    "format": {"const": "aiperf-package"},
+    "kind": {"enum": ["task", "result"]},
+    "schema_version": {"const": "1.0"},
+    "package_id": {"type": "string", "format": "uuid"},
+    "created_at_utc": {"type": "string", "format": "date-time"},
+    "producer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["app_version", "engine_version"],
+      "properties": {
+        "app_version": {"type": "string", "minLength": 1},
+        "engine_version": {"type": "string", "minLength": 1}
+      }
+    },
+    "compatibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["minimum_worker_version", "required_capabilities"],
+      "properties": {
+        "minimum_worker_version": {"type": "string", "minLength": 1},
+        "required_capabilities": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$"}
+        }
+      }
+    },
+    "task_id": {"type": "string", "format": "uuid"},
+    "task_snapshot_sha256": {"$ref": "#/$defs/sha256"},
+    "files": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/file"}
+    },
+    "run_id": {"type": "string", "format": "uuid"},
+    "source_task_package_id": {"type": "string", "format": "uuid"},
+    "source_task_snapshot_sha256": {"$ref": "#/$defs/sha256"},
+    "worker_version": {"type": "string", "minLength": 1},
+    "started_at_utc": {"type": "string", "format": "date-time"},
+    "finished_at_utc": {"type": "string", "format": "date-time"},
+    "run_status": {"enum": ["completed", "failed", "cancelled", "interrupted"]}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"kind": {"const": "result"}}, "required": ["kind"]},
+      "then": {
+        "required": [
+          "run_id",
+          "source_task_package_id",
+          "source_task_snapshot_sha256",
+          "worker_version",
+          "started_at_utc",
+          "finished_at_utc",
+          "run_status"
+        ]
+      },
+      "else": {
+        "not": {
+          "anyOf": [
+            {"required": ["run_id"]},
+            {"required": ["source_task_package_id"]},
+            {"required": ["source_task_snapshot_sha256"]},
+            {"required": ["worker_version"]},
+            {"required": ["started_at_utc"]},
+            {"required": ["finished_at_utc"]},
+            {"required": ["run_status"]}
+          ]
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "file": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "size_bytes", "sha256", "media_type"],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\)(?![A-Za-z]:).*"
+        },
+        "size_bytes": {"type": "integer", "minimum": 0},
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "media_type": {"type": "string", "minLength": 1}
+      }
+    }
+  }
+}

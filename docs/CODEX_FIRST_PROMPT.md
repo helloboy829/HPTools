@@ -1,6 +1,6 @@
 # Codex 启动提示词（可直接复制）
 
-请先完整阅读仓库根目录 `README.md`、`AGENTS.md` 和 `docs/` 下全部 Markdown 文档。它们是 AI-PERF 项目的正式需求基线。
+请先完整阅读仓库根目录 `README.md`、`AGENTS.md`、`docs/AGENTS.md` 和 `docs/` 下全部 Markdown 文档。它们是 AI-PERF 项目的需求与技术规格基线。对标注为“建议基线/待确认”的内容，应在实施前识别并确认，不能将其说成业务方已经批准。
 
 当前最终架构已经确定：
 - Windows 是唯一 Web 管理端，Python 3.11 + Conda + FastAPI，Vue3 编译静态资源由 FastAPI 托管。
@@ -23,4 +23,4 @@
 7. 每个里程碑的可交付内容与测试；
 8. 文档中仍需确认的问题。
 
-然后等待确认，或在无歧义的基础骨架上开始 M0。实现时严格遵循 AGENTS.md，不得擅自改成 Linux Web 中心架构、不得引入 Redis/Ray/Celery 作为第一期必需组件。
+然后按 `docs/09_ROADMAP_AND_ACCEPTANCE.md` 的 M0 范围整理问题清单和交付物；涉及“待确认”的架构、数据安全或协议兼容决策时先等待确认。只可在已明确的范围内准备可审阅的基础方案，不得擅自改成 Linux Web 中心架构，不得引入 Redis/Ray/Celery 作为第一期必需组件。

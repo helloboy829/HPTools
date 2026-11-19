@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aiperf.invalid/schemas/1.0/result-summary.schema.json",
+  "title": "AI-PERF result summary 1.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "run_id", "task_id", "task_snapshot_sha256", "status", "started_at_utc", "finished_at_utc", "engine_version", "worker_version", "execution", "counts", "metrics"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "run_id": {"type": "string", "format": "uuid"},
+    "task_id": {"type": "string", "format": "uuid"},
+    "task_snapshot_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "status": {"enum": ["completed", "failed", "cancelled", "interrupted"]},
+    "started_at_utc": {"type": "string", "format": "date-time"},
+    "finished_at_utc": {"type": "string", "format": "date-time"},
+    "engine_version": {"type": "string", "minLength": 1},
+    "worker_version": {"type": "string", "minLength": 1},
+    "execution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "concurrency", "requested_count"],
+      "properties": {
+        "mode": {"const": "fixed_concurrency"},
+        "concurrency": {"type": "integer", "minimum": 1, "maximum": 100},
+        "requested_count": {"type": "integer", "minimum": 1},
+        "warmup_count": {"type": "integer", "minimum": 0},
+        "dataset_mode": {"enum": ["sequential", "cycle", "random_seeded"]},
+        "dataset_seed": {"type": "integer"}
+      }
+    },
+    "counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scheduled", "completed", "success", "failed", "cancelled"],
+      "properties": {
+        "scheduled": {"type": "integer", "minimum": 0},
+        "completed": {"type": "integer", "minimum": 0},
+        "success": {"type": "integer", "minimum": 0},
+        "failed": {"type": "integer", "minimum": 0},
+        "cancelled": {"type": "integer", "minimum": 0}
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["run_duration_seconds", "success_rate", "throughput_completed_per_sec", "throughput_success_per_sec", "latency_ms"],
+      "properties": {
+        "run_duration_seconds": {"type": ["number", "null"], "minimum": 0},
+        "success_rate": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+        "throughput_completed_per_sec": {"type": ["number", "null"], "minimum": 0},
+        "throughput_success_per_sec": {"type": ["number", "null"], "minimum": 0},
+        "latency_ms": {"$ref": "#/$defs/latency"}
+      }
+    },
+    "error_counts": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}},
+    "validation_counts": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}}
+  },
+  "$defs": {
+    "latency": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sample_count", "min", "mean", "median", "p90", "p95", "p99", "max"],
+      "properties": {
+        "sample_count": {"type": "integer", "minimum": 0},
+        "min": {"type": ["number", "null"], "minimum": 0},
+        "mean": {"type": ["number", "null"], "minimum": 0},
+        "median": {"type": ["number", "null"], "minimum": 0},
+        "p90": {"type": ["number", "null"], "minimum": 0},
+        "p95": {"type": ["number", "null"], "minimum": 0},
+        "p99": {"type": ["number", "null"], "minimum": 0},
+        "max": {"type": ["number", "null"], "minimum": 0}
+      }
+    }
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aiperf.invalid/schemas/1.0/request-record.schema.json",
+  "title": "AI-PERF request record 1.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["run_id", "transaction_id", "request_index", "status", "validation_summary"],
+  "properties": {
+    "run_id": {"type": "string", "format": "uuid"},
+    "transaction_id": {"type": "string", "format": "uuid"},
+    "request_index": {"type": "integer", "minimum": 1},
+    "dataset_row_id": {"type": ["string", "null"]},
+    "status": {"enum": ["completed", "failed", "cancelled", "interrupted"]},
+    "started_at_utc": {"type": ["string", "null"], "format": "date-time"},
+    "duration_ms": {"type": ["number", "null"], "minimum": 0},
+    "http_status": {"type": ["integer", "null"], "minimum": 100, "maximum": 599},
+    "success": {"type": ["boolean", "null"]},
+    "error_code": {"type": ["string", "null"]},
+    "validation_summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["passed", "failed", "not_evaluable"],
+      "properties": {
+        "passed": {"type": "integer", "minimum": 0},
+        "failed": {"type": "integer", "minimum": 0},
+        "not_evaluable": {"type": "integer", "minimum": 0}
+      }
+    }
+  }
+}
