@@ -136,7 +136,19 @@ cURL 导入只是将命令文本解析为请求草稿，永不执行所导入命
 - 不支持的选项逐项列出；不可静默忽略影响请求语义的参数。
 - shell 转义语义复杂时，宁可拒绝导入并要求手动配置，不能执行原文求值。
 
-支持的 cURL 选项清单需在实现时以测试样例冻结。
+首期解析器只接受以下参数，并将命令转换为单个 HTTP 请求草稿：
+
+| 用途 | 支持写法 |
+|---|---|
+| 请求方法 | `-X METHOD`、`--request METHOD`、`--request=METHOD` |
+| 请求头 | `-H 'Name: value'`、`--header 'Name: value'`、`--header='Name: value'`；重复头按原顺序保留 |
+| URL | 第一个位置 URL，或 `--url URL` / `--url=URL`；仅接受 HTTP/HTTPS 绝对 URL |
+| 请求体 | `-d`、`--data`、`--data-raw`、`--data-binary`；参数和值可分开，长参数也支持 `--data=value` 形式 |
+| multipart | `-F`、`--form`，支持文本字段及 `name=@path` 文件字段 |
+
+未指定方法时，无请求体默认为 GET，有 data/form 请求体默认为 POST。URL 查询参数和重复字段按顺序保留；多个 data 参数按 cURL 语义以 `&` 拼接。表单 Content-Type 将 data 解析为有序键值对，JSON Content-Type 将合法 JSON 解析为 JSON 值。无 Content-Type 的 data 按文本处理。每个 cURL 输入只允许一个 URL 和一个请求，不支持 `--next` 或隐式多请求。
+
+导入器仅使用命令文本解析，不启动 Shell/子进程、不访问网络，也不打开本地文件。`-F 'name=@path'` 中的路径只作为导入提示保存，提示用户在执行前选择受管理的文件；导入阶段绝不会读取该路径。cURL 会自行读取文件的 `-d @path`、`--data @path`、`--data-binary @path`、`-F 'name=<path'` 和带 MIME 参数的 multipart 文件写法不在支持范围内，会被拒绝。敏感头、查询/表单字段以及 JSON 对象中名称疑似凭据的值替换为 `{{secrets.NAME}}` 引用，并在结果中列出需绑定的凭据名称。无法识别的参数、Shell 管道/重定向/命令替换和格式错误输入将安全拒绝，诊断不回显命令内容或值。
 
 ## 9. 业务规则和响应体处理
 
